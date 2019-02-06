@@ -64,8 +64,10 @@ class TestEndpointFileManager(base.OpflexTestBase):
             return_value=agent.epg_mapping_file)
         agent._write_vrf_file = mock.Mock()
         agent._write_lbiface_file = mock.Mock()
+        agent._write_local_file = mock.Mock()
         agent._delete_endpoint_file = mock.Mock()
         agent._delete_vrf_file = mock.Mock()
+        agent._delete_local_file = mock.Mock()
         agent.snat_iptables = mock.Mock()
         agent.snat_iptables.setup_snat_for_es = mock.Mock(
             return_value=tuple([None, None]))

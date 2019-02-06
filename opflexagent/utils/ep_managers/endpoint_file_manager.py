@@ -32,6 +32,8 @@ VRF_FILE_EXTENSION = "rdconfig"
 VRF_FILE_NAME_FORMAT = "%s." + VRF_FILE_EXTENSION
 LBIFACE_FILE_EXTENSION = "lbiface"
 LBIFACE_FILE_NAME_FORMAT = "%s." + LBIFACE_FILE_EXTENSION
+LOCAL_FILE_EXTENSION = "local"
+LOCAL_FILE_NAME_FORMAT = "%s." + LOCAL_FILE_EXTENSION
 NESTED_DOMAIN_UPLINK = "uplink"
 
 
@@ -77,8 +79,11 @@ class EndpointFileManager(endpoint_manager_base.EndpointManagerBase):
                                              VRF_FILE_NAME_FORMAT)
         self.lbiface_mapping_file_fmt = os.path.join(
                 config['epg_mapping_dir'], LBIFACE_FILE_NAME_FORMAT)
+        self.local_mapping_file_fmt = os.path.join(config['epg_mapping_dir'],
+                                                   LOCAL_FILE_NAME_FORMAT)
         self.file_formats = [self.epg_mapping_file, self.vrf_mapping_file,
-                             self.lbiface_mapping_file_fmt]
+                             self.lbiface_mapping_file_fmt,
+                             self.local_mapping_file_fmt]
         self.uplink_intf_name = config['nested_domain_uplink_interface']
         self.dhcp_domain = config['dhcp_domain']
         self.es_port_dict = {}
@@ -911,16 +916,23 @@ class EndpointFileManager(endpoint_manager_base.EndpointManagerBase):
     def _delete_lbiface_file(self, file_name):
         return self._delete_file(file_name, self.lbiface_mapping_file_fmt)
 
-    def _write_file(self, port_id, mapping_dict, file_format):
-        filename = file_format % port_id
+    def _write_local_file(self, local_id, mapping_dict):
+        return self._write_file(local_id, mapping_dict,
+                                self.local_mapping_file_fmt)
+
+    def _delete_local_file(self, local_id):
+        return self._delete_file(local_id, self.local_mapping_file_fmt)
+
+    def _write_file(self, prefix, mapping_dict, file_format):
+        filename = file_format % prefix
         if not os.path.exists(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename))
         with open(filename, 'w') as f:
             jsonutils.dump(mapping_dict, f, indent=4)
         return filename
 
-    def _delete_file(self, port_id, file_format):
+    def _delete_file(self, prefix, file_format):
         try:
-            os.remove(file_format % port_id)
+            os.remove(file_format % prefix)
         except OSError as e:
             LOG.debug(e.message)
