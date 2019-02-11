@@ -578,6 +578,7 @@ class GBPOpflexAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin,
         self.run_daemon_loop = False
         if self.quitting_rpc_timeout:
             self.set_rpc_timeout(self.quitting_rpc_timeout)
+        self.ep_manager.cleanup()
 
     def set_rpc_timeout(self, timeout):
         for rpc_api in (self.plugin_rpc, self.sg_plugin_rpc, self.state_rpc):

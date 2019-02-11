@@ -99,6 +99,8 @@ class TestGBPOpflexAgent(base.OpflexTestBase):
             #           return_value=constants.OVS_NORMAL),
             mock.patch('oslo_service.loopingcall.FixedIntervalLoopingCall',
                        new=MockFixedIntervalLoopingCall),
+            mock.patch('opflexagent.utils.ep_managers.endpoint_file_manager.'
+                       'EndpointFileManager._write_local_file'),
             mock.patch('opflexagent.gbp_agent.GBPOpflexAgent.'
                        '_report_state')):
             agent = gbp_agent.GBPOpflexAgent(**kwargs)

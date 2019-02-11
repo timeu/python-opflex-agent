@@ -92,6 +92,8 @@ class TestGBPOpflexAgent(base.OpflexTestBase):
             mock.patch('opflexagent.utils.bridge_managers.ovs_manager.'
                        'OvsManager.setup_integration_bridge',
                        return_value=mock.Mock()),
+            mock.patch('opflexagent.utils.ep_managers.endpoint_file_manager.'
+                       'EndpointFileManager._write_local_file'),
             mock.patch('neutron.agent.common.ovs_lib.OVSBridge.'
                        'create'),
             mock.patch('neutron.agent.common.ovs_lib.OVSBridge.'

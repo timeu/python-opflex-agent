@@ -53,8 +53,11 @@ class TestEndpointFileManager(base.OpflexTestBase):
     def _initialize_agent(self):
         cfg.CONF.set_override('epg_mapping_dir', self.ep_dir, 'OPFLEX')
         kwargs = gbp_agent.create_agent_config_map(cfg.CONF)
-        agent = endpoint_file_manager.EndpointFileManager().initialize(
-            'h1', mock.Mock(), kwargs)
+        agent = endpoint_file_manager.EndpointFileManager()
+        # This early mock is needed, since the method is being
+        # called in initialize
+        agent._write_local_file = mock.Mock()
+        agent.initialize('h1', mock.Mock(), kwargs)
         agent.bridge_manager.get_patch_port_pair_names = (mock.Mock(
             return_value=('qpi', 'qpf')))
         return agent
@@ -64,7 +67,6 @@ class TestEndpointFileManager(base.OpflexTestBase):
             return_value=agent.epg_mapping_file)
         agent._write_vrf_file = mock.Mock()
         agent._write_lbiface_file = mock.Mock()
-        agent._write_local_file = mock.Mock()
         agent._delete_endpoint_file = mock.Mock()
         agent._delete_vrf_file = mock.Mock()
         agent._delete_local_file = mock.Mock()
@@ -648,6 +650,44 @@ class TestEndpointFileManager(base.OpflexTestBase):
             self.manager._delete_endpoint_files.assert_called_once_with(
                 port.vif_id,
                 mac_exceptions=set(['AA:AA', 'BB:BB', 'aa:bb:cc:00:11:22']))
+
+    def test_create_delete_local_file(self):
+        # REVISIT: should include IPv6 pool as well, once that's fixed
+        self.manager._write_local_file.assert_called_with('snat',
+            [{'src-ip': '169.254.0.0/17'},
+             {'dst-ip': '169.254.0.0/17'},
+             {'src-ip': '169.254.128.0/19'},
+             {'dst-ip': '169.254.128.0/19'},
+             {'src-ip': '169.254.160.0/21'},
+             {'dst-ip': '169.254.160.0/21'},
+             {'src-ip': '169.254.168.0/24'},
+             {'dst-ip': '169.254.168.0/24'},
+             {'src-ip': '169.254.169.0/25'},
+             {'dst-ip': '169.254.169.0/25'},
+             {'src-ip': '169.254.169.128/26'},
+             {'dst-ip': '169.254.169.128/26'},
+             {'src-ip': '169.254.169.192/27'},
+             {'dst-ip': '169.254.169.192/27'},
+             {'src-ip': '169.254.169.224/28'},
+             {'dst-ip': '169.254.169.224/28'},
+             {'src-ip': '169.254.169.240/29'},
+             {'dst-ip': '169.254.169.240/29'},
+             {'src-ip': '169.254.169.248/30'},
+             {'dst-ip': '169.254.169.248/30'},
+             {'src-ip': '169.254.169.252/31'},
+             {'dst-ip': '169.254.169.252/31'},
+             {'src-ip': '169.254.169.255/32'},
+             {'dst-ip': '169.254.169.255/32'},
+             {'src-ip': '169.254.170.0/23'},
+             {'dst-ip': '169.254.170.0/23'},
+             {'src-ip': '169.254.172.0/22'},
+             {'dst-ip': '169.254.172.0/22'},
+             {'src-ip': '169.254.176.0/20'},
+             {'dst-ip': '169.254.176.0/20'},
+             {'src-ip': '169.254.192.0/18'},
+             {'dst-ip': '169.254.192.0/18'}])
+        self.manager.cleanup()
+        self.manager._delete_local_file.assert_called()
 
     def test_port_unbound_delete_vrf_file(self):
         # Bind 2 ports on same VRF

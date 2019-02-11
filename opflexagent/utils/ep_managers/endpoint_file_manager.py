@@ -34,6 +34,7 @@ LBIFACE_FILE_EXTENSION = "lbiface"
 LBIFACE_FILE_NAME_FORMAT = "%s." + LBIFACE_FILE_EXTENSION
 LOCAL_FILE_EXTENSION = "local"
 LOCAL_FILE_NAME_FORMAT = "%s." + LOCAL_FILE_EXTENSION
+LOCAL_FILE_NAME_PREFIX = 'snat'
 NESTED_DOMAIN_UPLINK = "uplink"
 
 
@@ -97,6 +98,15 @@ class EndpointFileManager(endpoint_manager_base.EndpointManagerBase):
         if ofcst.METADATA_DEFAULT_IP in self.int_fip_pool[4]:
             self.int_fip_pool[4].remove(ofcst.METADATA_DEFAULT_IP)
 
+        # REVISIT: this should also include the IPv6 pool. However,
+        #          we first need to fix this pool by removing the
+        #          the IPs that are used for well-known IPv6 services
+        cidr_list = []
+        for cidr in self.int_fip_pool[4].iter_cidrs():
+            cidr_list.append({'src-ip': str(cidr)})
+            cidr_list.append({'dst-ip': str(cidr)})
+        if cidr_list:
+            self._write_local_file(LOCAL_FILE_NAME_PREFIX, cidr_list)
         self.snat_iptables = snat_iptables_manager.SnatIptablesManager(
             bridge_manager.fabric_br)
         self._registered_endpoints = set()
@@ -109,6 +119,9 @@ class EndpointFileManager(endpoint_manager_base.EndpointManagerBase):
         self.nested_domain_uplink_interface = (
                 config['nested_domain_uplink_interface'])
         return self
+
+    def cleanup(self):
+        self._delete_local_file(LOCAL_FILE_NAME_PREFIX)
 
     def declare_endpoint(self, port, mapping):
         LOG.info("Endpoint declaration requested for port %s",
